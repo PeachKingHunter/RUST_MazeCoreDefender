@@ -1,13 +1,14 @@
 Welcome on this repo
+
 -> I create this game for learning rust
 
 The Game (no finished)
--> A player can move and should protect an core
--> Enemie try to go to the core
--> Player can "eat" enemies
+- The player should PROTECT the core
+- Enemies try to DESTROY the core
+- Player can KILL enemies (yellow cube)
 
 TODO:
--> spawn core at the begining of the game
--> Spawn enemies
--> pathfiding for enemies moves
--> end explosion on enemie reach the core
+- Spawn core at the begining of the game
+- Spawn enemies
+- Pathfiding for enemies moves
+- At end -> explosion on enemie reach the core
