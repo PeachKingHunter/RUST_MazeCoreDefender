@@ -8,7 +8,8 @@ The Game (no finished)
 - Player can KILL enemies (yellow cube)
 
 TODO:
-- Spawn core at the begining of the game
-- Spawn enemies
-- Pathfiding for enemies moves
+- Better Pathfiding 
+- Player kill enemie on touch
+- Upgrade player's movement
+- Player can place traps
 - At end -> explosion on enemie reach the core

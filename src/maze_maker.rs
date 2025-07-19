@@ -1,12 +1,7 @@
 use crate::SIZE_X;
 use crate::SIZE_Y;
 
-fn is_accessible_ok(
-    tab: &mut [[i8; SIZE_Y]; SIZE_X],
-    pos_x: usize,
-    pos_y: usize
-) -> bool {
-
+fn is_accessible_ok(tab: &mut [[i8; SIZE_Y]; SIZE_X], pos_x: usize, pos_y: usize) -> bool {
     // Is this case in the maze have an way to go to
     if pos_x + 1 < SIZE_X {
         if tab[pos_x + 1][pos_y] == 1 {
@@ -152,9 +147,9 @@ pub fn create_maze(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {
     create_ways(tab, pos_x, pos_y);
 
     // Create imperfections
-    let imperfection:i8 = 20;
-    for y in 1..SIZE_Y-1 {
-        for x in 1..SIZE_X-1 {
+    let imperfection: i8 = 20;
+    for y in 1..SIZE_Y - 1 {
+        for x in 1..SIZE_X - 1 {
             if tab[x][y] == 0 {
                 if imperfection > rand::random_range(0..100) {
                     tab[x][y] = 1;

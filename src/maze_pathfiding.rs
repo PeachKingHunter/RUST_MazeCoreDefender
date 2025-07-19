@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, i8, process::exit, usize};
+use std::{collections::LinkedList, i8, usize};
 
 use crate::{BASE_X, BASE_Y, SIZE_X, SIZE_Y};
 
@@ -18,9 +18,12 @@ fn create_case(dir_x: i8, dir_y: i8, parent: &Case) -> Case {
     let disy2 = BASE_Y as i64 - parent.pos_y as i64 - dir_y as i64;
     let distance = disy2.abs() - disy1.abs() + disx2.abs() - disx1.abs();
 
+    let npos_x = parent.pos_x as i8 + dir_x;
+    let npos_y = parent.pos_y as i8 + dir_y;
+
     let new_case = Case {
-        pos_x: (parent.pos_x as i8 + dir_x) as usize,
-        pos_y: (parent.pos_y as i8 + dir_y) as usize,
+        pos_x: npos_x as usize,
+        pos_y: npos_y as usize,
         price: parent.price + 1 + distance,
         parent_x: parent.pos_x,
         parent_y: parent.pos_y,
@@ -53,8 +56,8 @@ fn get_parent(list: &LinkedList<Case>, pos_x: usize, pos_y: usize) -> Case {
 }
 
 pub fn pathfinding(
-    pos_x: usize,
-    pos_y: usize,
+    default_pos_x: usize,
+    default_pos_y: usize,
     tab: [[i8; SIZE_Y]; SIZE_X],
 ) -> LinkedList<(i8, i8)> {
     // Needed vars
@@ -64,21 +67,22 @@ pub fn pathfinding(
     let distance = 0;
 
     let new_case = Case {
-        pos_x: pos_x,
-        pos_y: pos_y,
+        pos_x: default_pos_x,
+        pos_y: default_pos_y,
         price: distance,
-        parent_x: pos_x,
-        parent_y: pos_y,
+        parent_x: default_pos_x,
+        parent_y: default_pos_y,
     };
     opened.push_front(new_case);
 
     loop {
-        if let Some(case) = opened.pop_front() { // Temp line should take the lower price
+        if let Some(case) = opened.pop_front() {
+            // Temp line should take the lower price
             // Found a way to the core
             if case.pos_x == BASE_X && case.pos_y == BASE_Y {
                 let mut movs: LinkedList<(i8, i8)> = LinkedList::new();
                 let mut case = case;
-                while case.pos_x != case.parent_x && case.pos_y != case.parent_y {
+                while case.pos_x != default_pos_x || case.pos_y != default_pos_y {
                     let dir_x = case.pos_x as i8 - case.parent_x as i8;
                     let dir_y = case.pos_y as i8 - case.parent_y as i8;
                     movs.push_front((dir_x, dir_y));
@@ -89,46 +93,19 @@ pub fn pathfinding(
             }
 
             // Searching
-            let npos_x = case.pos_x + 1;
-            let npos_y = case.pos_y;
-            if available_pos(npos_x as i8, npos_y as i8) {
-                if tab[npos_x][npos_y] != 0 {
-                    if is_in_list(&closed, npos_x, npos_y) == false {
-                        let new = create_case(1, 0, &case);
-                        opened.push_front(new);
-                    }
-                }
-            }
+            let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-            let npos_x:i8 = case.pos_x as i8 - 1;
-            let npos_y:i8 = case.pos_y as i8;
-            if available_pos(npos_x, npos_y) {
-                if tab[npos_x as usize][npos_y as usize] != 0 {
-                    if is_in_list(&closed, npos_x as usize, npos_y as usize) == false {
-                        let new = create_case(-1, 0, &case);
-                        opened.push_front(new);
-                    }
-                }
-            }
+            for (dir_x, dir_y) in directions {
+                let npos_x = case.pos_x as i8 + dir_x;
+                let npos_y = case.pos_y as i8 + dir_y;
 
-            let npos_x = case.pos_x;
-            let npos_y = case.pos_y + 1;
-            if available_pos(npos_x as i8, npos_y as i8) {
-                if tab[npos_x][npos_y] != 0 {
-                    if is_in_list(&closed, npos_x, npos_y) == false {
-                        let new = create_case(0, 1, &case);
-                        opened.push_front(new);
-                    }
-                }
-            }
-
-            let npos_x:i8 = case.pos_x as i8;
-            let npos_y:i8 = case.pos_y as i8 - 1;
-            if available_pos(npos_x, npos_y) {
-                if tab[npos_x as usize][npos_y as usize] != 0 {
-                    if is_in_list(&closed, npos_x as usize, npos_y as usize) == false {
-                        let new = create_case(0, -1, &case);
-                        opened.push_front(new);
+                if available_pos(npos_x, npos_y) {
+                    if tab[npos_x as usize][npos_y as usize] != 0
+                        && !is_in_list(&closed, npos_x as usize, npos_y as usize)
+                        && !is_in_list(&opened, npos_x as usize, npos_y as usize)
+                    {
+                        let new_case = create_case(dir_x as i8, dir_y as i8, &case);
+                        opened.push_front(new_case);
                     }
                 }
             }
@@ -140,7 +117,7 @@ pub fn pathfinding(
     }
 
     // No Move
-    let mut movs: LinkedList<(i8, i8)> = LinkedList::new();
+    let movs: LinkedList<(i8, i8)> = LinkedList::new();
     return movs;
 }
 
@@ -149,7 +126,7 @@ pub fn interprete_pathfinding(
     tab: &mut [[i8; SIZE_Y]; SIZE_X],
     pos_x: &mut usize,
     pos_y: &mut usize,
-) {
+) -> bool {
     let mov = (*list).pop_front();
     match mov {
         Some((dir_x, dir_y)) => {
@@ -159,16 +136,18 @@ pub fn interprete_pathfinding(
                 if tab[new_pos_x as usize][new_pos_y as usize] == 1 {
                     tab[*pos_x as usize][*pos_y as usize] = 1;
                     tab[new_pos_x as usize][new_pos_y as usize] = 3; // TODO put an higher number
-                                                                     // but change it by three at the end before render for not move multiple time
                                                                      // an enemie
-
                     *pos_x = new_pos_x as usize;
                     *pos_y = new_pos_y as usize;
+                } else if tab[new_pos_x as usize][new_pos_y as usize] == 4 {
+                    // Lose
+                    return true;
                 }
             }
         }
         _ => println!("Empty pathfinding"),
     }
+    return false;
 }
 
 fn available_pos(pos_x: i8, pos_y: i8) -> bool {

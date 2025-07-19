@@ -74,23 +74,26 @@ fn main() -> std::io::Result<()> {
         }
 
         // Update & Render
+        if nb_frame % (FRAME_PER_SEC) == 0 {
+            // Spawn enemies
+            let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
+            // Calculate pathfinding for this enemie
+            enemies_pathfinding.push_front((
+                pos_x,
+                pos_y,
+                crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab),
+            ));
+        }
+
         if nb_frame % (FRAME_PER_SEC / 4) == 0 {
             crate::maze_manager::move_player(&mut tab, dir_x, dir_y);
 
-            // Temp spawn speed for testing
-            let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
-
-            // WORKING ON
-            /*enemies_pathfinding.push_front((
-                pos_x,
-                pos_y,
-                crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab)
-            ));
-
             // Move all enemies
             for (px, py, l) in enemies_pathfinding.iter_mut() {
-                crate::maze_pathfiding::interprete_pathfinding(l, &mut tab, px, py);
-            }*/
+                if crate::maze_pathfiding::interprete_pathfinding(l, &mut tab, px, py) == true {
+                    break 'gameLoop;
+                }
+            }
         }
         crate::maze_rendering::render(tab);
 

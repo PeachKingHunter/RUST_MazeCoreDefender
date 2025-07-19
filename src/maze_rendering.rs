@@ -1,6 +1,6 @@
-use std;
 use colored::Colorize;
 use crossterm::*;
+use std;
 
 use crate::SIZE_X;
 use crate::SIZE_Y;
@@ -51,5 +51,3 @@ pub fn render(tab: [[i8; SIZE_Y]; SIZE_X]) {
     }
     draw_empty_line();
 }
-
-
