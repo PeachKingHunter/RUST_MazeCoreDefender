@@ -1,4 +1,4 @@
-use std::{sync::mpsc::Sender, thread, time};
+use std::{collections::LinkedList, sync::mpsc::Sender, thread, time, usize};
 
 use crossterm::{
     event::{read, Event, KeyCode},
@@ -7,54 +7,18 @@ use crossterm::{
 
 mod maze_maker;
 mod maze_manager;
+mod maze_pathfiding;
 mod maze_rendering;
 
 pub const SIZE_X: usize = 31;
 pub const SIZE_Y: usize = 41;
 
+//Warning no verif on the pos putted here (3x3 arround basePos)
 const BASE_X: usize = 15;
 const BASE_Y: usize = 15;
 
 const FRAME_PER_SEC: i8 = 60;
 const FRAME_TIME: f64 = 1. / (FRAME_PER_SEC as f64);
-
-fn get_player_pos(tab: [[i8; SIZE_Y]; SIZE_X]) -> (i8, i8) {
-    for x in 0..SIZE_X - 1 {
-        for y in 0..SIZE_Y - 1 {
-            if tab[x][y] == 2 {
-                return (x as i8, y as i8);
-            }
-        }
-    }
-    return (-1, -1);
-}
-
-fn move_player(tab: &mut [[i8; SIZE_Y]; SIZE_X], move_x: i8, move_y: i8) {
-    let (pos_x, pos_y) = get_player_pos(*tab);
-
-    // Tab limit x
-    if pos_x + move_x < 0 || (pos_x + move_x) as usize >= SIZE_X {
-        return;
-    }
-
-    // Tab limit y
-    if pos_y + move_y < 0 || (pos_y + move_y) as usize >= SIZE_Y {
-        return;
-    }
-
-    // Player valid pos
-    if pos_x == -1 && pos_y == -1 {
-        return;
-    }
-
-    // Move in direction if no wall
-    if tab[(pos_x + move_x) as usize][(pos_y + move_y) as usize] == 1 {
-        tab[pos_x as usize][pos_y as usize] = 1;
-        tab[(pos_x + move_x) as usize][(pos_y + move_y) as usize] = 2;
-    }
-}
-
-fn spawn_enemie(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {}
 
 fn main() -> std::io::Result<()> {
     // Terminal mode
@@ -63,8 +27,6 @@ fn main() -> std::io::Result<()> {
     // Create maze
     let mut tab: [[i8; SIZE_Y]; SIZE_X] = [[0; SIZE_Y]; SIZE_X];
     crate::maze_maker::create_maze(&mut tab);
-    // Temp pacman
-    tab[10][10] = 2;
 
     // Inputs receiving
     let (tx, rx) = std::sync::mpsc::channel();
@@ -77,6 +39,12 @@ fn main() -> std::io::Result<()> {
 
     let mut dir_x: i8 = 0;
     let mut dir_y: i8 = 1;
+
+    let mut enemies_pathfinding: LinkedList<(usize, usize, LinkedList<(i8, i8)>)> =
+        LinkedList::new();
+
+    crate::maze_manager::create_core(&mut tab);
+    crate::maze_manager::spawn_player(&mut tab);
 
     // Game loop
     'gameLoop: loop {
@@ -107,9 +75,22 @@ fn main() -> std::io::Result<()> {
 
         // Update & Render
         if nb_frame % (FRAME_PER_SEC / 4) == 0 {
-            move_player(&mut tab, dir_x, dir_y);
+            crate::maze_manager::move_player(&mut tab, dir_x, dir_y);
+
             // Temp spawn speed for testing
-            spawn_enemie(&mut tab);
+            let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
+
+            // WORKING ON
+            /*enemies_pathfinding.push_front((
+                pos_x,
+                pos_y,
+                crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab)
+            ));
+
+            // Move all enemies
+            for (px, py, l) in enemies_pathfinding.iter_mut() {
+                crate::maze_pathfiding::interprete_pathfinding(l, &mut tab, px, py);
+            }*/
         }
         crate::maze_rendering::render(tab);
 

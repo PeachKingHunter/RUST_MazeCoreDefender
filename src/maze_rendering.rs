@@ -27,6 +27,8 @@ fn draw_line(tab: [[i8; SIZE_Y]; SIZE_X], line_y: usize) {
             print!("{}", "● ".green());
         } else if val == 3 {
             print!("{}", "☐ ".yellow());
+        } else if val == 4 {
+            print!("{}", "⌬ ".blue());
         }
     }
     println!("{}", "|".blue());

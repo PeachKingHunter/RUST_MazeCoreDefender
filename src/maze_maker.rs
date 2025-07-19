@@ -87,7 +87,7 @@ fn is_direction_ok(tab: &mut [[i8; SIZE_Y]; SIZE_X], pos_x: usize, pos_y: usize,
             }
             return true;
         }
-        _ => println!("Error"),
+        _ => println!("Error is direction ok"),
     }
     return false;
 }
@@ -115,7 +115,7 @@ fn create_ways(tab: &mut [[i8; SIZE_Y]; SIZE_X], pos_x: usize, pos_y: usize) {
                     tab[pos_x][pos_y - 1] = 1;
                     create_ways(tab, pos_x, pos_y - 2);
                 }
-                _ => println!("Error"),
+                _ => println!("Error create ways"),
             }
         }
     }
