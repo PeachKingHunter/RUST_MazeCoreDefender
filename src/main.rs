@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, sync::mpsc::Sender, thread, time, usize};
+use std::{sync::mpsc::Sender, thread, time, usize};
 
 use crossterm::{
     event::{read, Event, KeyCode},
@@ -40,8 +40,8 @@ fn main() -> std::io::Result<()> {
     let mut dir_x: i8 = 0;
     let mut dir_y: i8 = 1;
 
-    let mut enemies_pathfinding: LinkedList<(usize, usize, LinkedList<(i8, i8)>)> =
-        LinkedList::new();
+    let mut enemies_pathfinding: Vec<(usize, usize, Vec<(i8, i8)>)> =
+        Vec::new();
 
     crate::maze_manager::create_core(&mut tab);
     crate::maze_manager::spawn_player(&mut tab);
@@ -78,7 +78,7 @@ fn main() -> std::io::Result<()> {
             // Spawn enemies
             let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
             // Calculate pathfinding for this enemie
-            enemies_pathfinding.push_front((
+            enemies_pathfinding.push((
                 pos_x,
                 pos_y,
                 crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab),
@@ -89,7 +89,7 @@ fn main() -> std::io::Result<()> {
             crate::maze_manager::move_player(&mut tab, dir_x, dir_y);
 
             // Move all enemies
-            for (px, py, l) in enemies_pathfinding.iter_mut() {
+            for (px, py, l) in &mut enemies_pathfinding {
                 if crate::maze_pathfiding::interprete_pathfinding(l, &mut tab, px, py) == true {
                     break 'gameLoop;
                 }

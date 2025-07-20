@@ -64,7 +64,7 @@ pub fn spawn_enemie(tab: &mut [[i8; SIZE_Y]; SIZE_X]) -> (usize, usize) {
             tab[SIZE_X - 1][rdm] = 3;
             return (SIZE_X - 1, rdm);
         }
-        _ => println!("ERROR spawn enemie"),
+        _ => eprintln!("ERROR spawn enemie"),
     }
     (0, 0)
 }

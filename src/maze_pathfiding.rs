@@ -1,4 +1,4 @@
-use std::{collections::LinkedList, i8, usize};
+use std::{i8, usize};
 
 use crate::{BASE_X, BASE_Y, SIZE_X, SIZE_Y};
 
@@ -31,8 +31,8 @@ fn create_case(dir_x: i8, dir_y: i8, parent: &Case) -> Case {
     return new_case;
 }
 
-fn is_in_list(list: &LinkedList<Case>, pos_x: usize, pos_y: usize) -> bool {
-    for case in list.iter() {
+fn is_in_list(list: &Vec<Case>, pos_x: usize, pos_y: usize) -> bool {
+    for case in list {
         if pos_x == case.pos_x && pos_y == case.pos_y {
             return true;
         }
@@ -40,8 +40,8 @@ fn is_in_list(list: &LinkedList<Case>, pos_x: usize, pos_y: usize) -> bool {
     return false;
 }
 
-fn get_parent(list: &LinkedList<Case>, pos_x: usize, pos_y: usize) -> Case {
-    for case in list.iter() {
+fn get_parent(list: &Vec<Case>, pos_x: usize, pos_y: usize) -> Case {
+    for case in list {
         if pos_x == case.pos_x && pos_y == case.pos_y {
             return case.clone();
         }
@@ -59,10 +59,10 @@ pub fn pathfinding(
     default_pos_x: usize,
     default_pos_y: usize,
     tab: [[i8; SIZE_Y]; SIZE_X],
-) -> LinkedList<(i8, i8)> {
+) -> Vec<(i8, i8)> {
     // Needed vars
-    let mut closed: LinkedList<Case> = LinkedList::new();
-    let mut opened: LinkedList<Case> = LinkedList::new();
+    let mut closed: Vec<Case> = Vec::new();
+    let mut opened: Vec<Case> = Vec::new();
 
     let distance = 0;
 
@@ -73,19 +73,19 @@ pub fn pathfinding(
         parent_x: default_pos_x,
         parent_y: default_pos_y,
     };
-    opened.push_front(new_case);
+    opened.push(new_case);
 
     loop {
-        if let Some(case) = opened.pop_front() {
+        if let Some(case) = opened.pop() {
             // Temp line should take the lower price
             // Found a way to the core
             if case.pos_x == BASE_X && case.pos_y == BASE_Y {
-                let mut movs: LinkedList<(i8, i8)> = LinkedList::new();
+                let mut movs: Vec<(i8, i8)> = Vec::new();
                 let mut case = case;
                 while case.pos_x != default_pos_x || case.pos_y != default_pos_y {
                     let dir_x = case.pos_x as i8 - case.parent_x as i8;
                     let dir_y = case.pos_y as i8 - case.parent_y as i8;
-                    movs.push_front((dir_x, dir_y));
+                    movs.push((dir_x, dir_y));
 
                     case = get_parent(&closed, case.parent_x, case.parent_y);
                 }
@@ -105,29 +105,29 @@ pub fn pathfinding(
                         && !is_in_list(&opened, npos_x as usize, npos_y as usize)
                     {
                         let new_case = create_case(dir_x as i8, dir_y as i8, &case);
-                        opened.push_front(new_case);
+                        opened.push(new_case);
                     }
                 }
             }
 
-            closed.push_front(case);
+            closed.push(case);
         } else {
             break;
         }
     }
 
     // No Move
-    let movs: LinkedList<(i8, i8)> = LinkedList::new();
+    let movs: Vec<(i8, i8)> = Vec::new();
     return movs;
 }
 
 pub fn interprete_pathfinding(
-    list: &mut LinkedList<(i8, i8)>,
+    list: &mut Vec<(i8, i8)>,
     tab: &mut [[i8; SIZE_Y]; SIZE_X],
     pos_x: &mut usize,
     pos_y: &mut usize,
 ) -> bool {
-    let mov = (*list).pop_front();
+    let mov = (*list).pop();
     match mov {
         Some((dir_x, dir_y)) => {
             let new_pos_x: i8 = *pos_x as i8 + dir_x;
@@ -145,7 +145,7 @@ pub fn interprete_pathfinding(
                 }
             }
         }
-        _ => println!("Empty pathfinding"),
+        _ => {}, //println!("Empty pathfinding"),
     }
     return false;
 }
