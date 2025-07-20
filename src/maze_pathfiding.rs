@@ -55,6 +55,30 @@ fn get_parent(list: &Vec<Case>, pos_x: usize, pos_y: usize) -> Case {
     }
 }
 
+fn get_lower_price(list: &mut Vec<Case>) -> Option<Case> {
+    let mut smallest_price: i64 = i64::MAX;
+    let mut res_index: i8 = -1;
+    for i in 0..list.len() {
+        let case: Option<&Case> = list.get(i);
+        match case {
+            Some(case) => {
+                if case.price <= smallest_price {
+                    smallest_price = case.price;
+                    res_index = i as i8;
+                }
+            }
+
+            None => {}
+        }
+    }
+
+    if res_index == -1 {
+        return None;
+    }
+
+    return Some(list.remove(res_index as usize));
+}
+
 pub fn pathfinding(
     default_pos_x: usize,
     default_pos_y: usize,
@@ -76,44 +100,45 @@ pub fn pathfinding(
     opened.push(new_case);
 
     loop {
-        if let Some(case) = opened.pop() {
-            // Temp line should take the lower price
-            // Found a way to the core
-            if case.pos_x == BASE_X && case.pos_y == BASE_Y {
-                let mut movs: Vec<(i8, i8)> = Vec::new();
-                let mut case = case;
-                while case.pos_x != default_pos_x || case.pos_y != default_pos_y {
-                    let dir_x = case.pos_x as i8 - case.parent_x as i8;
-                    let dir_y = case.pos_y as i8 - case.parent_y as i8;
-                    movs.push((dir_x, dir_y));
+        let case: Case = match get_lower_price(&mut opened) {
+            Some(c) => c,
+            _ => break,
+        };
 
-                    case = get_parent(&closed, case.parent_x, case.parent_y);
-                }
-                return movs;
+        // Temp line should take the lower price
+        // Found a way to the core
+        if case.pos_x == BASE_X && case.pos_y == BASE_Y {
+            let mut movs: Vec<(i8, i8)> = Vec::new();
+            let mut case = case;
+            while case.pos_x != default_pos_x || case.pos_y != default_pos_y {
+                let dir_x = case.pos_x as i8 - case.parent_x as i8;
+                let dir_y = case.pos_y as i8 - case.parent_y as i8;
+                movs.push((dir_x, dir_y));
+
+                case = get_parent(&closed, case.parent_x, case.parent_y);
             }
-
-            // Searching
-            let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
-
-            for (dir_x, dir_y) in directions {
-                let npos_x = case.pos_x as i8 + dir_x;
-                let npos_y = case.pos_y as i8 + dir_y;
-
-                if available_pos(npos_x, npos_y) {
-                    if tab[npos_x as usize][npos_y as usize] != 0
-                        && !is_in_list(&closed, npos_x as usize, npos_y as usize)
-                        && !is_in_list(&opened, npos_x as usize, npos_y as usize)
-                    {
-                        let new_case = create_case(dir_x as i8, dir_y as i8, &case);
-                        opened.push(new_case);
-                    }
-                }
-            }
-
-            closed.push(case);
-        } else {
-            break;
+            return movs;
         }
+
+        // Searching
+        let directions = [(1, 0), (-1, 0), (0, 1), (0, -1)];
+
+        for (dir_x, dir_y) in directions {
+            let npos_x = case.pos_x as i8 + dir_x;
+            let npos_y = case.pos_y as i8 + dir_y;
+
+            if available_pos(npos_x, npos_y) {
+                if tab[npos_x as usize][npos_y as usize] != 0
+                    && !is_in_list(&closed, npos_x as usize, npos_y as usize)
+                    && !is_in_list(&opened, npos_x as usize, npos_y as usize)
+                {
+                    let new_case = create_case(dir_x as i8, dir_y as i8, &case);
+                    opened.push(new_case);
+                }
+            }
+        }
+
+        closed.push(case);
     }
 
     // No Move

@@ -8,8 +8,9 @@ The Game (no finished)
 - Player can KILL enemies (yellow cube)
 
 TODO:
-- Better Pathfiding 
 - Player kill enemie on touch
 - Upgrade player's movement
 - Player can place traps
+- Redone Pathfiding on blocked enemy sometime
+- Enemy should dodge player and some trap
 - At end -> explosion on enemie reach the core

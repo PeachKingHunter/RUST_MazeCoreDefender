@@ -40,8 +40,7 @@ fn main() -> std::io::Result<()> {
     let mut dir_x: i8 = 0;
     let mut dir_y: i8 = 1;
 
-    let mut enemies_pathfinding: Vec<(usize, usize, Vec<(i8, i8)>)> =
-        Vec::new();
+    let mut enemies_pathfinding: Vec<(usize, usize, Vec<(i8, i8)>)> = Vec::new();
 
     crate::maze_manager::create_core(&mut tab);
     crate::maze_manager::spawn_player(&mut tab);
