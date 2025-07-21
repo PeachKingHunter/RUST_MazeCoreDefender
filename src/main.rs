@@ -20,26 +20,6 @@ const BASE_Y: usize = 15;
 const FRAME_PER_SEC: u64 = 60;
 const FRAME_TIME: f64 = 1. / (FRAME_PER_SEC as f64);
 
-fn delete_enemy(
-    mut list: Vec<(usize, usize, Vec<(i8, i8)>)>,
-    pos_x: i8,
-    pos_y: i8,
-) -> Vec<(usize, usize, Vec<(i8, i8)>)> {
-    let mut i: usize = 0;
-    let mut to_remove: bool = false;
-    for (px, py, _) in &list {
-        if *px as i8 == pos_x && *py as i8 == pos_y {
-            to_remove = true;
-            break;
-        }
-        i += 1;
-    }
-    if to_remove == true {
-        let _ = list.remove(i);
-    }
-    list
-}
-
 fn main() -> std::io::Result<()> {
     // Terminal mode
     crossterm::terminal::enable_raw_mode()?;
@@ -57,6 +37,7 @@ fn main() -> std::io::Result<()> {
     // Game variables
     let mut spawn_time: u64 = 6;
     let mut nb_frame: u64 = 0;
+    let mut core_life: i8 = 3;
 
     let mut dir_x: i8 = 0;
     let mut dir_y: i8 = 1;
@@ -95,15 +76,17 @@ fn main() -> std::io::Result<()> {
         }
 
         // Update & Render
-        if nb_frame % (FRAME_PER_SEC * (spawn_time)) == 0 || spawn_time == 1{
+        if nb_frame % (FRAME_PER_SEC * (spawn_time)) == 0 || spawn_time == 1 {
             // Spawn enemies
-            let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
-            // Calculate pathfinding for this enemie
-            enemies_pathfinding.push((
-                pos_x,
-                pos_y,
-                crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab),
-            ));
+            if core_life > 0 {
+                let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
+                // Calculate pathfinding for this enemie
+                enemies_pathfinding.push((
+                    pos_x,
+                    pos_y,
+                    crate::maze_pathfiding::pathfinding(pos_x, pos_y, tab),
+                ));
+            }
         }
 
         if nb_frame % (FRAME_PER_SEC * 10) == 0 {
@@ -116,9 +99,11 @@ fn main() -> std::io::Result<()> {
             // Player's Movement
             if dir_x != new_dir_x || dir_y != new_dir_y {
                 let (p_pos_x, p_pos_y) = crate::maze_manager::get_player_pos(tab);
-                if crate::maze_manager::verif_tab_limits(p_pos_x + new_dir_x, p_pos_y + new_dir_y) == true {
+                if crate::maze_manager::verif_tab_limits(p_pos_x + new_dir_x, p_pos_y + new_dir_y)
+                    == true
+                {
                     if tab[(p_pos_x + new_dir_x) as usize][(p_pos_y + new_dir_y) as usize] == 1
-                    || tab[(p_pos_x + new_dir_x) as usize][(p_pos_y + new_dir_y) as usize] == 3
+                        || tab[(p_pos_x + new_dir_x) as usize][(p_pos_y + new_dir_y) as usize] == 3
                     {
                         dir_x = new_dir_x;
                         dir_y = new_dir_y;
@@ -128,9 +113,10 @@ fn main() -> std::io::Result<()> {
 
             crate::maze_manager::move_player(&mut tab, dir_x, dir_y);
 
-            //Kill an enemie if possible
+            // Kill an enemie if possible
             let (p_pos_x, p_pos_y) = crate::maze_manager::get_player_pos(tab);
-            enemies_pathfinding = delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
+            enemies_pathfinding =
+                crate::maze_manager::delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
 
             // Move all enemies
             for (px, py, l) in &mut enemies_pathfinding {
@@ -139,10 +125,23 @@ fn main() -> std::io::Result<()> {
                 }
             }
 
-            //Kill an enemie if possible
-            enemies_pathfinding = delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
+            // Kill an enemie if possible
+            enemies_pathfinding =
+                crate::maze_manager::delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
+
+            // Core's life
+            if tab[BASE_X][BASE_Y] != 4 {
+                if core_life > 0 {
+                    tab[BASE_X][BASE_Y] = 4;
+                    core_life -= 1;
+                }
+            }
         }
-        crate::maze_rendering::render(tab);
+        crate::maze_rendering::render(tab, core_life);
+
+        if core_life == 0 && nb_frame % (FRAME_PER_SEC / 20) == 0 {
+            crate::maze_manager::core_explosion(&mut tab);
+        }
 
         thread::sleep(time::Duration::from_millis((FRAME_TIME * 1000.) as u64)); // Not Exact -> should be remake
         nb_frame = nb_frame + 1;

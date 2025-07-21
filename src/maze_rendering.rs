@@ -19,18 +19,46 @@ fn draw_line(tab: [[i8; SIZE_Y]; SIZE_X], line_y: usize) {
     print!("{}", "| ".blue());
     for i in 0..SIZE_X {
         let val: i8 = tab[i][line_y];
-        if val == 0 {
-            print!("{}", "☐ ".red());
-        } else if val == 1 {
-            print!("  ");
-        } else if val == 2 {
-            print!("{}", "● ".green());
-        } else if val == 3 {
-            print!("{}", "☐ ".yellow());
-        } else if val == 4 {
-            print!("{}", "⌬ ".blue());
+        print!("{}", match val {
+            0 => "☐ ".red(),
+            1 => "  ".white(),
+            2 => "● ".green(),
+            3 => "☐ ".yellow(),
+            4 => "⌬ ".blue(),
+            5 => "■ ".red(),
+            6 => "■ ".bright_red(),
+            7 => "■ ".yellow(),
+            8 => "■ ".bright_yellow(),
+            9 => "☐ ".bright_yellow(),
+            _ => "  ".white(),
+
+        });
+    }
+    println!("{}", "|".blue());
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::MoveToColumn(0));
+}
+
+fn draw_life_bar(life: i8) {
+    print!("{}", "| ".blue());
+
+    if life > 0 {
+        // Life display
+        for _ in 0..(SIZE_X * life as usize / 3) {
+            print!("{}", "█ ".blue());
+        }
+        for _ in 0..(SIZE_X - (SIZE_X * life as usize / 3)) {
+            print!("{}", "  ".blue());
+        }
+    } else {
+        for _ in 0..(SIZE_X - 26 / 2 - ((SIZE_X - 26 / 2) * life as usize / 3)) / 2 {
+            print!("{}", "  ".blue());
+        }
+        print!("{}", "Created by PeachKingHunter".blue());
+        for _ in 0..(SIZE_X - 26 / 2 - ((SIZE_X - 26 / 2) * life as usize / 3)) / 2 {
+            print!("{}", "  ".blue());
         }
     }
+
     println!("{}", "|".blue());
     let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::MoveToColumn(0));
 }
@@ -42,7 +70,7 @@ fn clear_terminal() {
         .unwrap();
 }
 
-pub fn render(tab: [[i8; SIZE_Y]; SIZE_X]) {
+pub fn render(tab: [[i8; SIZE_Y]; SIZE_X], life: i8) {
     clear_terminal();
     // Drawing map
     draw_empty_line();
@@ -51,9 +79,7 @@ pub fn render(tab: [[i8; SIZE_Y]; SIZE_X]) {
     }
     draw_empty_line();
 
-    // TODO
-    println!("LifeDisplay here todo (3 life)");
-    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::MoveToColumn(0));
+    draw_life_bar(life);
 
     draw_empty_line();
 }

@@ -129,8 +129,8 @@ pub fn pathfinding(
 
             if available_pos(npos_x, npos_y) {
                 if tab[npos_x as usize][npos_y as usize] != 0
-                    && !is_in_list(&closed, npos_x as usize, npos_y as usize)
-                    && !is_in_list(&opened, npos_x as usize, npos_y as usize)
+                && !is_in_list(&closed, npos_x as usize, npos_y as usize)
+                && !is_in_list(&opened, npos_x as usize, npos_y as usize)
                 {
                     let new_case = create_case(dir_x as i8, dir_y as i8, &case);
                     opened.push(new_case);
@@ -159,11 +159,10 @@ pub fn interprete_pathfinding(
             let new_pos_y: i8 = *pos_y as i8 + dir_y;
             if available_pos(new_pos_x, new_pos_y) {
                 if tab[new_pos_x as usize][new_pos_y as usize] != 0 {
-
-                    //if tab[*pos_x as usize][*pos_y as usize] != 2 {
+                    if tab[new_pos_x as usize][new_pos_y as usize] < 5 {
                         tab[*pos_x as usize][*pos_y as usize] = 1;
-                    //}
-                    if tab[new_pos_x as usize][new_pos_y as usize] != 2 {
+                    }
+                    if tab[new_pos_x as usize][new_pos_y as usize] != 2 && tab[new_pos_x as usize][new_pos_y as usize] < 5 {
                         tab[new_pos_x as usize][new_pos_y as usize] = 3;
                     }
 
@@ -175,7 +174,7 @@ pub fn interprete_pathfinding(
                 }
             }
         }
-        _ => {}, //println!("Empty pathfinding"),
+        _ => {} //println!("Empty pathfinding"),
     }
     return false;
 }

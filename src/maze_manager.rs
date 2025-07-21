@@ -79,6 +79,26 @@ pub fn spawn_enemie(tab: &mut [[i8; SIZE_Y]; SIZE_X]) -> (usize, usize) {
     (0, 0)
 }
 
+pub fn delete_enemy(
+    mut list: Vec<(usize, usize, Vec<(i8, i8)>)>,
+    pos_x: i8,
+    pos_y: i8,
+) -> Vec<(usize, usize, Vec<(i8, i8)>)> {
+    let mut i: usize = 0;
+    let mut to_remove: bool = false;
+    for (px, py, _) in &list {
+        if *px as i8 == pos_x && *py as i8 == pos_y {
+            to_remove = true;
+            break;
+        }
+        i += 1;
+    }
+    if to_remove == true {
+        let _ = list.remove(i);
+    }
+    list
+}
+
 pub fn create_core(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {
     tab[BASE_X][BASE_Y] = 4;
 
@@ -96,4 +116,58 @@ pub fn create_core(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {
 
 pub fn spawn_player(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {
     tab[BASE_X][BASE_Y - 1] = 2;
+}
+
+pub fn core_explosion(tab: &mut [[i8; SIZE_Y]; SIZE_X]) {
+    tab[BASE_X][BASE_Y] = 5;
+
+    // No tab limit verif to do because start at 1 to size-1
+    for x in 1..(SIZE_X - 1) {
+        for y in 1..(SIZE_Y - 1) {
+            let rdme:i8 = rand::random_range(0..2);
+            if rdme == 0 {
+                continue;
+            }
+
+
+            if tab[x][y] >= 5 && tab[x][y] < 40 {
+                let mut new_val: i8 = tab[x][y];
+                
+                let mut rdm:i8 = rand::random_range(0..=8);
+                if rdm == 0 {
+                    if new_val < 30 {
+                        new_val += 1;
+                    }
+                }
+
+                rdm = rand::random_range(0..=2);
+                if rdm == 0{
+                    tab[x][y] += 1;
+                }
+
+                new_val += 50;
+                if tab[x + 1][y] < 5 {
+                    tab[x + 1][y] = new_val;
+                }
+                if tab[x - 1][y] < 5 {
+                    tab[x - 1][y] = new_val;
+                }
+                if tab[x][y + 1] < 5 {
+                    tab[x][y + 1] = new_val;
+                }
+                if tab[x][y - 1] < 5 {
+                    tab[x][y - 1] = new_val;
+                }
+            }
+        }
+    }
+    for x in 0..(SIZE_X - 0) {
+        for y in 0..(SIZE_Y - 0) {
+            if tab[x][y] > 40 {
+                tab[x][y] -= 50;
+            }
+        }
+    }
+
+    tab[BASE_X][BASE_Y] = 5;
 }
