@@ -17,8 +17,28 @@ pub const SIZE_Y: usize = 41;
 const BASE_X: usize = 15;
 const BASE_Y: usize = 15;
 
-const FRAME_PER_SEC: i8 = 60;
+const FRAME_PER_SEC: u64 = 60;
 const FRAME_TIME: f64 = 1. / (FRAME_PER_SEC as f64);
+
+fn delete_enemy(
+    mut list: Vec<(usize, usize, Vec<(i8, i8)>)>,
+    pos_x: i8,
+    pos_y: i8,
+) -> Vec<(usize, usize, Vec<(i8, i8)>)> {
+    let mut i: usize = 0;
+    let mut to_remove: bool = false;
+    for (px, py, _) in &list {
+        if *px as i8 == pos_x && *py as i8 == pos_y {
+            to_remove = true;
+            break;
+        }
+        i += 1;
+    }
+    if to_remove == true {
+        let _ = list.remove(i);
+    }
+    list
+}
 
 fn main() -> std::io::Result<()> {
     // Terminal mode
@@ -35,10 +55,14 @@ fn main() -> std::io::Result<()> {
     });
 
     // Game variables
-    let mut nb_frame: i8 = 0;
+    let mut spawn_time: u64 = 6;
+    let mut nb_frame: u64 = 0;
 
     let mut dir_x: i8 = 0;
     let mut dir_y: i8 = 1;
+
+    let mut new_dir_x: i8 = 0;
+    let mut new_dir_y: i8 = 1;
 
     let mut enemies_pathfinding: Vec<(usize, usize, Vec<(i8, i8)>)> = Vec::new();
 
@@ -47,33 +71,31 @@ fn main() -> std::io::Result<()> {
 
     // Game loop
     'gameLoop: loop {
-        nb_frame = (nb_frame + 1) % FRAME_PER_SEC;
-
         // Managing inputs
         if let Ok(input) = rx.try_recv() {
             if event::KeyCode::is_esc(&input) == true {
                 break 'gameLoop;
             }
             if input == event::KeyCode::Char('q') {
-                dir_x = -1;
-                dir_y = 0;
+                new_dir_x = -1;
+                new_dir_y = 0;
             }
             if input == event::KeyCode::Char('d') {
-                dir_x = 1;
-                dir_y = 0;
+                new_dir_x = 1;
+                new_dir_y = 0;
             }
             if input == event::KeyCode::Char('z') {
-                dir_x = 0;
-                dir_y = -1;
+                new_dir_x = 0;
+                new_dir_y = -1;
             }
             if input == event::KeyCode::Char('s') {
-                dir_x = 0;
-                dir_y = 1;
+                new_dir_x = 0;
+                new_dir_y = 1;
             }
         }
 
         // Update & Render
-        if nb_frame % (FRAME_PER_SEC) == 0 {
+        if nb_frame % (FRAME_PER_SEC * (spawn_time)) == 0 || spawn_time == 1{
             // Spawn enemies
             let (pos_x, pos_y): (usize, usize) = crate::maze_manager::spawn_enemie(&mut tab);
             // Calculate pathfinding for this enemie
@@ -84,8 +106,31 @@ fn main() -> std::io::Result<()> {
             ));
         }
 
+        if nb_frame % (FRAME_PER_SEC * 10) == 0 {
+            if spawn_time > 1 {
+                spawn_time -= 1;
+            }
+        }
+
         if nb_frame % (FRAME_PER_SEC / 4) == 0 {
+            // Player's Movement
+            if dir_x != new_dir_x || dir_y != new_dir_y {
+                let (p_pos_x, p_pos_y) = crate::maze_manager::get_player_pos(tab);
+                if crate::maze_manager::verif_tab_limits(p_pos_x + new_dir_x, p_pos_y + new_dir_y) == true {
+                    if tab[(p_pos_x + new_dir_x) as usize][(p_pos_y + new_dir_y) as usize] == 1
+                    || tab[(p_pos_x + new_dir_x) as usize][(p_pos_y + new_dir_y) as usize] == 3
+                    {
+                        dir_x = new_dir_x;
+                        dir_y = new_dir_y;
+                    }
+                }
+            }
+
             crate::maze_manager::move_player(&mut tab, dir_x, dir_y);
+
+            //Kill an enemie if possible
+            let (p_pos_x, p_pos_y) = crate::maze_manager::get_player_pos(tab);
+            enemies_pathfinding = delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
 
             // Move all enemies
             for (px, py, l) in &mut enemies_pathfinding {
@@ -93,11 +138,14 @@ fn main() -> std::io::Result<()> {
                     break 'gameLoop;
                 }
             }
+
+            //Kill an enemie if possible
+            enemies_pathfinding = delete_enemy(enemies_pathfinding, p_pos_x, p_pos_y);
         }
         crate::maze_rendering::render(tab);
 
-        thread::sleep(time::Duration::from_millis((FRAME_TIME * 1000.) as u64));
-        // Not Exact -> should be remake
+        thread::sleep(time::Duration::from_millis((FRAME_TIME * 1000.) as u64)); // Not Exact -> should be remake
+        nb_frame = nb_frame + 1;
     }
     let _ = crossterm::terminal::disable_raw_mode();
     Ok(())

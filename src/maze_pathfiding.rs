@@ -158,10 +158,15 @@ pub fn interprete_pathfinding(
             let new_pos_x: i8 = *pos_x as i8 + dir_x;
             let new_pos_y: i8 = *pos_y as i8 + dir_y;
             if available_pos(new_pos_x, new_pos_y) {
-                if tab[new_pos_x as usize][new_pos_y as usize] == 1 {
-                    tab[*pos_x as usize][*pos_y as usize] = 1;
-                    tab[new_pos_x as usize][new_pos_y as usize] = 3; // TODO put an higher number
-                                                                     // an enemie
+                if tab[new_pos_x as usize][new_pos_y as usize] != 0 {
+
+                    //if tab[*pos_x as usize][*pos_y as usize] != 2 {
+                        tab[*pos_x as usize][*pos_y as usize] = 1;
+                    //}
+                    if tab[new_pos_x as usize][new_pos_y as usize] != 2 {
+                        tab[new_pos_x as usize][new_pos_y as usize] = 3;
+                    }
+
                     *pos_x = new_pos_x as usize;
                     *pos_y = new_pos_y as usize;
                 } else if tab[new_pos_x as usize][new_pos_y as usize] == 4 {

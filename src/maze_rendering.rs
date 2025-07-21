@@ -50,4 +50,10 @@ pub fn render(tab: [[i8; SIZE_Y]; SIZE_X]) {
         draw_line(tab, i);
     }
     draw_empty_line();
+
+    // TODO
+    println!("LifeDisplay here todo (3 life)");
+    let _ = crossterm::execute!(std::io::stdout(), crossterm::cursor::MoveToColumn(0));
+
+    draw_empty_line();
 }
